@@ -29,7 +29,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <cstdlib>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 #include <time.h>
 #include <fstream>
 #include <string>
@@ -51,6 +51,8 @@ void ConstrainedColor(bool constrain);
 double StringToDouble(const std::string& s);
 double Random(double (*fun)(double), double xmin, double xmax);
 double Fun(double x);
+
+GLFWwindow *window=nullptr;
 
 /// Dude hole examples
 vector<Point*> CreateHeadHole();
@@ -227,14 +229,26 @@ void Init()
   const int window_width = 800,
             window_height = 600;
 
-  if (glfwInit() != GL_TRUE)
-    ShutDown(1);
-  // 800 x 600, 16 bit color, no depth, alpha or stencil buffers, windowed
-  if (glfwOpenWindow(window_width, window_height, 5, 6, 5, 0, 0, 0, GLFW_WINDOW) != GL_TRUE)
-    ShutDown(1);
+  if(!glfwInit())
+      glfwTerminate();
 
-  glfwSetWindowTitle("Poly2Tri - C++");
-  glfwSwapInterval(1);
+  // 800 x 600, 16 bit color, no depth, alpha or stencil buffers, windowed
+    
+#ifndef NDEBUG
+//  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+#endif
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+//  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, (int)GL_TRUE);
+//  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  window=glfwCreateWindow(window_width, window_height, "Poly2Tri - C++", NULL, NULL);
+  if(!window)
+  {
+      glfwTerminate();
+  }
+
+//  glfwSwapInterval(1);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -250,6 +264,8 @@ void ShutDown(int return_code)
 
 void MainLoop(const double zoom)
 {
+    glfwMakeContextCurrent(window);
+
   // the time of the previous frame
   double old_time = glfwGetTime();
   // this just loops as long as the program runs
@@ -263,11 +279,11 @@ void MainLoop(const double zoom)
 
     // escape to quit, arrow keys to rotate view
     // Check if ESC key was pressed or window was closed
-    running = !glfwGetKey(GLFW_KEY_ESC) && glfwGetWindowParam(GLFW_OPENED);
+    running=!glfwGetKey(window, GLFW_KEY_ESCAPE);// && glfwGetWindowParam(GLFW_OPENED);
 
-    if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
       rotate_y += delta_rotate;
-    if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
       rotate_y -= delta_rotate;
     // z axis always rotates
     rotate_z += delta_rotate;
@@ -280,7 +296,7 @@ void MainLoop(const double zoom)
     }
 
     // swap back and front buffers
-    glfwSwapBuffers();
+    glfwSwapBuffers(window);
   }
 }
 
